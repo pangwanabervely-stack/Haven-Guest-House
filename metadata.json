@@ -1,0 +1,6 @@
+{
+  "name": "The Haven Guest House & Management",
+  "description": "Full-stack guest house booking and management platform with guest portal, host operations dashboard, room inventory, double-booking prevention, cleaning tracker, live messaging, and room service.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

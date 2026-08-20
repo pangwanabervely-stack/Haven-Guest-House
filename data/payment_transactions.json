@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1c417fa3-9c8e-49a6-8f0d-a57b9092a4c2",
+    "booking_id": "30c85ffa-4cbe-4752-8ff9-590d3108b569",
+    "provider": "paynow",
+    "provider_reference": "HAVEN-BKG-30C85FFA-TEST-FINAL-1787038912344",
+    "paynow_reference": "PN-TEST-9988",
+    "amount": 20.09,
+    "currency": "USD",
+    "status": "paid",
+    "method": "web",
+    "created_at": "2026-08-18T07:41:52.699Z",
+    "updated_at": "2026-08-18T07:41:52.699Z",
+    "verified_at": "2026-08-18T07:41:52.699Z",
+    "paid_at": "2026-08-18T07:41:52.699Z"
+  }
+]
