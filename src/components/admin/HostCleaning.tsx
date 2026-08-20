@@ -273,7 +273,12 @@ export const HostCleaning: React.FC<HostCleaningProps> = ({ rooms, onRefreshRoom
 
       {/* Housekeeping Inspection Quality Modal */}
       {inspectingRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setInspectingRoom(null);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+        >
           <div className="bg-[#FDFCF9] rounded-[28px] shadow-2xl max-w-lg w-full overflow-hidden border border-[#E5E2D9]">
             {/* Modal Header */}
             <div className="bg-[#2C2C2C] text-white p-6 relative border-b border-[#3E3E3E]">

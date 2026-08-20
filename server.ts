@@ -507,16 +507,110 @@ function getPaynow(appUrl?: string, bookingId?: string): Paynow | null {
   if (!integrationKey) {
     return null;
   }
+  const cleanAppUrl =
+    appUrl && appUrl.startsWith('http') && !appUrl.includes('localhost')
+      ? appUrl
+      : process.env.APP_URL && !process.env.APP_URL.includes('localhost')
+        ? process.env.APP_URL
+        : appUrl || 'http://localhost:3000';
+
   const resultUrl =
-    process.env.PAYNOW_RESULT_URL ||
-    (appUrl ? `${appUrl}/api/paynow/result` : 'http://localhost:3000/api/paynow/result');
+    process.env.PAYNOW_RESULT_URL && !process.env.PAYNOW_RESULT_URL.includes('localhost')
+      ? process.env.PAYNOW_RESULT_URL
+      : `${cleanAppUrl}/api/paynow/result`;
+
   const returnUrl =
-    process.env.PAYNOW_RETURN_URL ||
-    (appUrl
-      ? `${appUrl}/?view=guest-dashboard&status=complete${bookingId ? `&booking_id=${bookingId}` : ''}`
-      : `http://localhost:3000/?view=guest-dashboard&status=complete${bookingId ? `&booking_id=${bookingId}` : ''}`);
+    process.env.PAYNOW_RETURN_URL && !process.env.PAYNOW_RETURN_URL.includes('localhost')
+      ? process.env.PAYNOW_RETURN_URL
+      : `${cleanAppUrl}/?view=guest-dashboard&status=complete${bookingId ? `&booking_id=${bookingId}` : ''}`;
 
   return new Paynow(integrationId, integrationKey, resultUrl, returnUrl);
+}
+
+// Helper to execute Paynow transaction initiation with full test mode / merchant email handling and fallbacks
+async function initiatePaynowGatewayTransaction(
+  paynow: Paynow,
+  reference: string,
+  description: string,
+  numAmount: number,
+  method: 'web' | 'ecocash' | 'onemoney',
+  phone?: string,
+  customerEmail?: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  const merchantAuthEmail =
+    process.env.PAYNOW_AUTH_EMAIL ||
+    process.env.PAYNOW_MERCHANT_EMAIL ||
+    'pangwanabervely@gmail.com';
+  // For web payments, omit authEmail or pass merchant email. For mobile, pass merchantAuthEmail in test mode.
+  const initialAuthEmail = method === 'web' ? undefined : merchantAuthEmail || customerEmail;
+
+  let payment = paynow.createPayment(reference, initialAuthEmail as any);
+  payment.add(description, numAmount);
+
+  let response: any;
+  if ((method === 'ecocash' || method === 'onemoney') && phone) {
+    try {
+      response = await paynow.sendMobile(payment, phone, method);
+    } catch (mobileErr: any) {
+      console.warn('[Paynow sendMobile error]:', mobileErr);
+      response = { success: false, error: mobileErr.message || 'Mobile payment initiation failed.' };
+    }
+  } else {
+    try {
+      response = await paynow.send(payment);
+    } catch (sendErr: any) {
+      console.warn('[Paynow send error]:', sendErr);
+      response = { success: false, error: sendErr.message || 'Paynow gateway connection failed.' };
+    }
+  }
+
+  // Automatic retry if test mode error occurs
+  const errStr = (response?.error || '').toLowerCase();
+  if (
+    response &&
+    !response.success &&
+    (errStr.includes('authemail') ||
+      errStr.includes('test mode') ||
+      errStr.includes('registered email') ||
+      errStr.includes('merchant'))
+  ) {
+    console.warn('[Paynow test mode fallback]: Retrying transaction with merchant auth email...');
+    try {
+      payment = paynow.createPayment(reference, merchantAuthEmail);
+      payment.add(description, numAmount);
+      if ((method === 'ecocash' || method === 'onemoney') && phone) {
+        response = await paynow.sendMobile(payment, phone, method);
+      } else {
+        response = await paynow.send(payment);
+      }
+    } catch (retryErr: any) {
+      console.warn('[Paynow retry error]:', retryErr);
+    }
+
+    if (!response || !response.success) {
+      // Final attempt: without any authEmail
+      try {
+        payment = paynow.createPayment(reference);
+        payment.add(description, numAmount);
+        if ((method === 'ecocash' || method === 'onemoney') && phone) {
+          response = await paynow.sendMobile(payment, phone, method);
+        } else {
+          response = await paynow.send(payment);
+        }
+      } catch (finalErr: any) {
+        console.warn('[Paynow final attempt error]:', finalErr);
+      }
+    }
+  }
+
+  if (response && response.success) {
+    return { success: true, data: response };
+  }
+
+  return {
+    success: false,
+    error: response?.error || 'Could not initiate Paynow transaction. Please verify details and try again.'
+  };
 }
 
 // Verify Paynow Webhook Hash Signature
@@ -807,46 +901,18 @@ async function startServer() {
 
       if (paynow && process.env.PAYNOW_INTEGRATION_KEY) {
         // Real Paynow Zimbabwe Gateway Integration
-        const merchantAuthEmail = process.env.PAYNOW_AUTH_EMAIL || process.env.PAYNOW_MERCHANT_EMAIL;
-        const initialAuthEmail = merchantAuthEmail || (method === 'web' ? undefined : customerEmail);
+        const gatewayRes = await initiatePaynowGatewayTransaction(
+          paynow,
+          reference,
+          description,
+          numAmount,
+          method as any,
+          phone,
+          customerEmail
+        );
 
-        let payment = paynow.createPayment(reference, initialAuthEmail as any);
-        payment.add(description, numAmount);
-
-        let response: any;
-        if ((method === 'ecocash' || method === 'onemoney') && phone) {
-          try {
-            response = await paynow.sendMobile(payment, phone, method);
-          } catch (mobileErr: any) {
-            console.warn('[Paynow sendMobile error]:', mobileErr);
-            response = { success: false, error: mobileErr.message || 'Mobile payment initiation failed.' };
-          }
-        } else {
-          response = await paynow.send(payment);
-        }
-
-        // Automatic retry without authEmail if test mode error occurs
-        if (
-          response &&
-          !response.success &&
-          response.error &&
-          response.error.toLowerCase().includes('authemail')
-        ) {
-          console.warn('[Paynow test mode email fallback]: Retrying transaction without authEmail...');
-          payment = paynow.createPayment(reference);
-          payment.add(description, numAmount);
-          if ((method === 'ecocash' || method === 'onemoney') && phone) {
-            if (merchantAuthEmail) {
-              const retryPayment = paynow.createPayment(reference, merchantAuthEmail);
-              retryPayment.add(description, numAmount);
-              response = await paynow.sendMobile(retryPayment, phone, method);
-            }
-          } else {
-            response = await paynow.send(payment);
-          }
-        }
-
-        if (response && response.success) {
+        if (gatewayRes.success && gatewayRes.data) {
+          const response = gatewayRes.data;
           const txn: PaymentTransactionRecord = {
             id: crypto.randomUUID(),
             booking_id: bookingId,
@@ -883,10 +949,10 @@ async function startServer() {
             simulated: false
           });
         } else {
-          console.error('[Paynow Error]:', response?.error);
-          let errText = response?.error || 'Could not initiate Paynow transaction. Please verify details and try again.';
+          console.error('[Paynow Error]:', gatewayRes.error);
+          let errText = gatewayRes.error || 'Could not initiate Paynow transaction. Please verify details and try again.';
           if (errText.toLowerCase().includes('test mode') || errText.toLowerCase().includes('test case')) {
-            errText = 'Paynow is currently in Test Mode. For EcoCash remote testing, use official test number 0771111111 (Success), 0772222222 (Delayed), or select "Cards & Web" to pay online.';
+            errText = 'Paynow is currently in Test Mode. For EcoCash testing, use test number 0771111111 (Success), or select "Cards & Web" to pay online.';
           }
           return res.status(400).json({ error: errText });
         }
@@ -1001,25 +1067,18 @@ async function startServer() {
       const paynow = getPaynow(appUrl, bookingIdForOrder);
 
       if (paynow && process.env.PAYNOW_INTEGRATION_KEY) {
-        const merchantAuthEmail = process.env.PAYNOW_AUTH_EMAIL || process.env.PAYNOW_MERCHANT_EMAIL;
-        const initialAuthEmail = merchantAuthEmail || (method === 'web' ? undefined : customerEmail);
+        const gatewayRes = await initiatePaynowGatewayTransaction(
+          paynow,
+          reference,
+          description,
+          numAmount,
+          method as any,
+          phone,
+          customerEmail
+        );
 
-        let payment = paynow.createPayment(reference, initialAuthEmail as any);
-        payment.add(description, numAmount);
-
-        let response: any;
-        if ((method === 'ecocash' || method === 'onemoney') && phone) {
-          try {
-            response = await paynow.sendMobile(payment, phone, method);
-          } catch (mobileErr: any) {
-            console.warn('[Paynow sendMobile error]:', mobileErr);
-            response = { success: false, error: mobileErr.message || 'Mobile payment initiation failed.' };
-          }
-        } else {
-          response = await paynow.send(payment);
-        }
-
-        if (response && response.success) {
+        if (gatewayRes.success && gatewayRes.data) {
+          const response = gatewayRes.data;
           const txn: PaymentTransactionRecord = {
             id: crypto.randomUUID(),
             booking_id: bookingIdForOrder || serviceOrderId,
@@ -1057,8 +1116,7 @@ async function startServer() {
             simulated: false
           });
         } else {
-          let errText = response?.error || 'Could not initiate Paynow transaction.';
-          return res.status(400).json({ error: errText });
+          return res.status(400).json({ error: gatewayRes.error || 'Could not initiate Paynow transaction.' });
         }
       } else {
         // Safe Sandbox Mode for service orders
@@ -1518,6 +1576,63 @@ async function startServer() {
     } catch (err: any) {
       console.error('[Record Service Payment Error]:', err);
       return res.status(500).json({ error: err.message || 'Failed to record service order payment.' });
+    }
+  });
+
+  // --- HOUSEKEEPING / ROOM CLEANING STATUS API ---
+  app.post('/api/housekeeping/update-status', async (req: Request, res: Response) => {
+    try {
+      const { roomId, cleaningStatus } = req.body;
+      if (!roomId || !cleaningStatus) {
+        return res.status(400).json({ error: 'Room ID and cleaning status are required.' });
+      }
+
+      // Map frontend status to PostgreSQL enum ('clean', 'dirty', 'cleaning')
+      let dbCleaningStatus: string = cleaningStatus;
+      if (cleaningStatus === 'in_progress') {
+        dbCleaningStatus = 'cleaning';
+      } else if (cleaningStatus === 'inspected') {
+        dbCleaningStatus = 'clean';
+      } else if (cleaningStatus === 'clean' || cleaningStatus === 'dirty') {
+        dbCleaningStatus = cleaningStatus;
+      } else {
+        dbCleaningStatus = 'clean';
+      }
+
+      // Perform update in Supabase using admin client to guarantee execution
+      const { data, error } = await supabaseAdmin
+        .from('rooms')
+        .update({
+          cleaning_status: dbCleaningStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', roomId)
+        .select('*')
+        .maybeSingle();
+
+      if (error) {
+        console.error('[Housekeeping Update Error]:', error);
+        return res.status(500).json({ error: 'Database update failed: ' + error.message });
+      }
+
+      if (!data) {
+        return res.status(404).json({ error: 'Room not found.' });
+      }
+
+      // Format response with UI-friendly cleaning status
+      const updatedRoom = {
+        ...data,
+        cleaning_status: cleaningStatus // preserves 'in_progress' or 'inspected' in UI memory
+      };
+
+      return res.json({
+        success: true,
+        room: updatedRoom,
+        message: `Room status updated to ${cleaningStatus}`
+      });
+    } catch (err: any) {
+      console.error('[Housekeeping Update Exception]:', err);
+      return res.status(500).json({ error: err.message || 'Failed to update cleaning status.' });
     }
   });
 

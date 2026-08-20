@@ -77,18 +77,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* CTAs */}
           <div className="flex flex-wrap items-center gap-4">
             <button
-              onClick={onBookDirect}
+              onClick={onExploreRooms}
               className="px-8 py-3.5 rounded-full bg-[#5A5A40] hover:bg-[#484833] text-white text-xs font-bold uppercase tracking-widest shadow-sm transition-all flex items-center gap-3 group"
             >
-              <span>Reserve Your Suite</span>
+              <span>Explore & Book Suites</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
 
             <button
-              onClick={onExploreRooms}
+              onClick={onBookDirect}
               className="px-7 py-3.5 rounded-full bg-[#FDFCF9]/10 hover:bg-[#FDFCF9]/20 text-[#FDFCF9] border border-[#E5E2D9]/40 text-xs font-bold uppercase tracking-widest backdrop-blur-md transition-colors"
             >
-              Explore Suites
+              Direct Reservation
             </button>
           </div>
 
@@ -146,7 +146,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {featuredRooms.map((room) => (
             <div
               key={room.id}
-              className="bg-white rounded-3xl overflow-hidden border border-[#E5E2D9] shadow-xs hover:shadow-sm hover:border-[#5A5A40] transition-all flex flex-col group"
+              onClick={() => onSelectRoom(room)}
+              className="bg-white rounded-3xl overflow-hidden border border-[#E5E2D9] shadow-xs hover:shadow-md hover:border-[#5A5A40] transition-all duration-300 flex flex-col group cursor-pointer hover:-translate-y-1"
             >
               {/* Image with Room badge */}
               <div className="relative aspect-[16/10] overflow-hidden bg-[#F5F2ED]">
@@ -209,8 +210,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </span>
 
                   <button
-                    onClick={() => onSelectRoom(room)}
-                    className="px-4 py-2 rounded-full bg-[#5A5A40] hover:bg-[#484833] text-white text-[10px] font-bold uppercase tracking-widest transition-colors shadow-2xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectRoom(room);
+                    }}
+                    className="px-4 py-2 rounded-full bg-[#5A5A40] hover:bg-[#484833] text-white text-[10px] font-bold uppercase tracking-widest transition-colors shadow-2xs group-hover:bg-[#484833]"
                   >
                     View & Reserve
                   </button>

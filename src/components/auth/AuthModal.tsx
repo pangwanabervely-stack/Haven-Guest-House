@@ -30,19 +30,48 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const { login, register, currentUser } = useAuth();
   const { success, error } = useToast();
 
-  // If already authenticated and modal is open, auto close immediately
-  useEffect(() => {
-    if (isOpen && currentUser) {
-      onClose();
-    }
-  }, [isOpen, currentUser, onClose]);
+  const resetFields = () => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setFullName('');
+    setPhone('');
+    setShowPassword(false);
+  };
 
-  // Sync mode if initialMode changes
+  const handleClose = () => {
+    resetFields();
+    onClose();
+  };
+
+  // Reset fields whenever modal opens or closes
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode);
+      resetFields();
+    } else {
+      resetFields();
     }
   }, [isOpen, initialMode]);
+
+  // If already authenticated and modal is open, auto close immediately
+  useEffect(() => {
+    if (isOpen && currentUser) {
+      handleClose();
+    }
+  }, [isOpen, currentUser]);
+
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -57,11 +86,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           return;
         }
         const userProfile = await login(email.trim(), password);
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        setFullName('');
-        setPhone('');
+        resetFields();
         success('Signed in successfully.');
         onClose();
 
@@ -102,11 +127,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           password: password.trim(),
           phone: phone.trim()
         });
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        setFullName('');
-        setPhone('');
+        resetFields();
         success('Account created successfully.');
         onClose();
 
@@ -122,12 +143,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+    >
       <div className="bg-[#FDFCF9] rounded-[28px] shadow-2xl max-w-md w-full overflow-hidden border border-[#E5E2D9]">
         {/* Header */}
         <div className="bg-[#2C2C2C] text-white p-6 relative border-b border-[#3E3E3E]">
           <button
-            onClick={onClose}
+            type="button"
+            onClick={handleClose}
+            aria-label="Close modal"
             className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-[#E5E2D9] hover:text-white flex items-center justify-center transition-colors"
           >
             <X className="w-4 h-4" />

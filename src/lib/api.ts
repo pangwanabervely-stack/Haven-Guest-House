@@ -241,6 +241,23 @@ export const api = {
 
   // Housekeeping Staff Status Update - Guaranteed not to fail on enum check
   updateRoomCleaningStatus: async (id: string, cleaningStatus: CleaningStatus): Promise<Room> => {
+    try {
+      const res = await fetch('/api/housekeeping/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: id, cleaningStatus })
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.room) {
+          return json.room as Room;
+        }
+      }
+    } catch (apiErr) {
+      console.warn('[Housekeeping API fetch error, falling back to direct client]:', apiErr);
+    }
+
     let dbStatus: string = cleaningStatus;
     if (cleaningStatus === 'in_progress') {
       dbStatus = 'cleaning';
