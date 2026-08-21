@@ -1,5 +1,5 @@
 import serverless from 'serverless-http';
-import { createExpressApp } from '../../server';
+import { createExpressApp } from '../../server/app';
 
 const app = createExpressApp();
 
