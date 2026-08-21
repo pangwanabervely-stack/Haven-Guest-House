@@ -99,6 +99,18 @@ export const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
     checkAvail();
   }, [isOpen, room?.id, checkInDate, checkOutDate]);
 
+  // Escape key to dismiss
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   // Safe early exit AFTER all hooks have executed
   if (!isOpen || !room) {
     return null;
@@ -131,7 +143,12 @@ export const RoomDetailModal: React.FC<RoomDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm overflow-y-auto">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm overflow-y-auto"
+    >
       <div className="bg-[#FDFCF9] rounded-[36px] shadow-2xl max-w-4xl w-full overflow-hidden border border-[#E5E2D9] my-8">
         {/* Gallery Carousel & Header */}
         <div className="relative aspect-[16/9] sm:aspect-[21/9] bg-[#2C2C2C] overflow-hidden">

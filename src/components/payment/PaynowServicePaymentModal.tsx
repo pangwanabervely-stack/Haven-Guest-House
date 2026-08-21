@@ -228,7 +228,15 @@ export const PaynowServicePaymentModal: React.FC<PaynowServicePaymentModalProps>
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && step !== 'initiating' && step !== 'awaiting' && !isPolling) {
+          stopPolling();
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm"
+    >
       <div className="bg-[#FDFCF9] rounded-[32px] max-w-lg w-full border border-[#E5E2D9] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-6 border-b border-[#E5E2D9] flex items-center justify-between bg-white">

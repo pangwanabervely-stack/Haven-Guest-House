@@ -1156,7 +1156,12 @@ export const GuestWelcomeLanding: React.FC<GuestWelcomeLandingProps> = ({
 
       {/* 5. CONCIERGE / ATTRACTION INQUIRY MODAL */}
       {conciergeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !sendingConcierge) setConciergeModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm animate-fadeIn"
+        >
           <div className="bg-[#FDFCF9] rounded-[28px] max-w-lg w-full overflow-hidden border border-[#E5E2D9] shadow-2xl space-y-4 p-6 sm:p-8">
             <div className="flex items-center justify-between pb-4 border-b border-[#E5E2D9]">
               <div>
@@ -1241,7 +1246,12 @@ export const GuestWelcomeLanding: React.FC<GuestWelcomeLandingProps> = ({
 
       {/* ROOM CLEANING REQUEST CONFIRMATION MODAL */}
       {cleaningModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !requestingCleaning) setCleaningModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm"
+        >
           <div className="bg-[#FDFCF9] rounded-3xl max-w-md w-full p-6 sm:p-8 border border-[#E5E2D9] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-[#F5F2ED] border border-[#E5E2D9] flex items-center justify-center shrink-0">

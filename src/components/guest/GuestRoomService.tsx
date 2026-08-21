@@ -522,7 +522,12 @@ export const GuestRoomService: React.FC<GuestRoomServiceProps> = ({ activeBookin
 
       {/* CART DRAWER MODAL */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/50 backdrop-blur-xs">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSubmitting) setIsCartOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-end bg-black/65 backdrop-blur-sm"
+        >
           <div className="bg-[#FDFCF9] w-full max-w-md h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto border-l border-[#E5E2D9]">
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-[#E5E2D9]">

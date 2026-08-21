@@ -1,0 +1,16 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+  functions = "netlify/functions"
+
+# Route API endpoints directly to Netlify Serverless Function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# Single Page Application (SPA) Routing Fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

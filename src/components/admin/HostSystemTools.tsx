@@ -181,9 +181,9 @@ FOR EACH ROW EXECUTE FUNCTION check_booking_overlap();`;
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs text-[#2C2C2C]">
           <div className="bg-white p-4 rounded-2xl border border-[#E5E2D9] space-y-1">
-            <div className="font-bold text-[#2C2C2C]">Bervely Pangwana</div>
+            <div className="font-bold text-[#2C2C2C]">Haven Management</div>
             <div>Role: <strong className="text-[#5A5A40]">Host / Owner</strong></div>
-            <div className="text-[11px] text-[#8C887D]">pangwanabervely@gmail.com</div>
+            <div className="text-[11px] text-[#8C887D]">host@thehaven.co.zw</div>
           </div>
 
           <div className="bg-white p-4 rounded-2xl border border-[#E5E2D9] space-y-1">

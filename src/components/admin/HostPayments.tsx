@@ -498,7 +498,12 @@ export const HostPayments: React.FC<HostPaymentsProps> = ({ bookings, onRefreshB
 
       {/* ACCOMMODATION PAYMENT MODAL */}
       {activeBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isProcessing) setActiveBooking(null);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm"
+        >
           <div className="bg-[#FDFCF9] rounded-[32px] p-6 sm:p-8 max-w-md w-full border border-[#E5E2D9] shadow-2xl space-y-6">
             <h3 className="font-serif italic text-xl font-normal text-[#5A5A40] border-b border-[#E5E2D9] pb-3">
               Record Guest Settlement
@@ -578,7 +583,12 @@ export const HostPayments: React.FC<HostPaymentsProps> = ({ bookings, onRefreshB
 
       {/* SERVICE ORDER SETTLEMENT MODAL */}
       {activeServiceOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isProcessing) setActiveServiceOrder(null);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm"
+        >
           <div className="bg-[#FDFCF9] rounded-[32px] p-6 sm:p-8 max-w-md w-full border border-[#E5E2D9] shadow-2xl space-y-6">
             <h3 className="font-serif italic text-xl font-normal text-[#5A5A40] border-b border-[#E5E2D9] pb-3">
               Settle Room Service / Incidentals

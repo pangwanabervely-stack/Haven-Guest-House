@@ -10,7 +10,7 @@ This document provides a reference for testing and evaluating **The Haven Guest 
 | :--- | :--- | :--- | :--- |
 | **Resident Guest Demo** | `guest` | `tawanda.moyo@gmail.com` | Active stay booking, in-room dining, laundry orders, guest folio, room tab |
 | **Upcoming Guest Demo** | `guest` | `ruvimbo.c@outlook.com` | Pre-arrival reservation, Paynow accommodation settlement, availability test |
-| **Host / Owner Demo** | `host` | `pangwanabervely@gmail.com` | Front desk operations, arrival check-in, checkout balance gate, financial audit |
+| **Host / Owner Demo** | `host` | `host@thehaven.co.zw` | Front desk operations, arrival check-in, checkout balance gate, financial audit |
 | **Housekeeping Demo** | `cleaning_staff` | `chipo.housekeeping@example.com` / `housekeeping@thehaven.co.zw` | Dedicated mobile cleaning portal, room sanitation turnaround, inspection alerts |
 
 > **Password Security Notice**: Test account passwords configured in private Supabase authentication instances are set separately and are not stored in the public repository. For local development, new guest accounts can also be freely registered via the **Sign In / Register** modal, and staff can log in using their provisioned administrative credentials.
@@ -64,7 +64,7 @@ This document provides a reference for testing and evaluating **The Haven Guest 
 ### Host / Front Desk Test Account
 
 - **Role**: `host`
-- **Primary Persona**: Bervely Pangwana (`pangwanabervely@gmail.com`)
+- **Primary Persona**: Haven Host Administrator (`host@thehaven.co.zw`)
 - **Password**: Set separately / not stored in the repository
 
 #### Tested Capabilities:
@@ -188,7 +188,7 @@ Follow this 3-phase test plan to evaluate the entire guest lifecycle and operati
 6. Verify the housekeeping notification dispatch.
 
 ### Phase 3 — Host (Operations, Inspection & Checkout)
-1. Sign out and sign in as **Host** (`pangwanabervely@gmail.com`).
+1. Sign out and sign in as **Host** (`host@thehaven.co.zw`).
 2. In **Housekeeping & Readiness**, locate the cleaned suite and click **Inspect & Mark Ready** to advance status to `inspected`.
 3. In **Room Service Management**, view the active dining and laundry orders and advance them to `completed`.
 4. In **Bookings Management**, inspect the guest's folio:

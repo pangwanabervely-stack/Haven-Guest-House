@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Star, Sparkles, MessageSquare, CheckCircle } from 'lucide-react';
 import { Booking } from '../../types';
 import { api } from '../../lib/api';
@@ -27,6 +27,17 @@ export const GuestReviewModal: React.FC<GuestReviewModalProps> = ({
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !submitting) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, submitting, onClose]);
 
   if (!isOpen || !booking) return null;
 
@@ -77,7 +88,14 @@ export const GuestReviewModal: React.FC<GuestReviewModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !submitting) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm animate-fade-in"
+    >
       <div className="bg-[#FDFCF9] rounded-[28px] shadow-2xl max-w-md w-full overflow-hidden border border-[#E5E2D9]">
         {/* Header */}
         <div className="bg-[#2C2C2C] text-white p-6 relative border-b border-[#3E3E3E]">

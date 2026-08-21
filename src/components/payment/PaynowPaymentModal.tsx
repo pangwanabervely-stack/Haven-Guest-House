@@ -296,7 +296,14 @@ export const PaynowPaymentModal: React.FC<PaynowPaymentModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && step !== 'initiating' && step !== 'awaiting' && !isPolling) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/65 backdrop-blur-sm flex items-center justify-center p-4"
+    >
       <div className="relative bg-[#FCFBF7] rounded-[24px] border border-[#E5E0D5] shadow-2xl max-w-lg w-full overflow-hidden text-[#2C2C2C]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E5E0D5] bg-white">
@@ -309,7 +316,7 @@ export const PaynowPaymentModal: React.FC<PaynowPaymentModalProps> = ({
                 Pay with Paynow
               </h2>
               <p className="text-xs text-[#6E6E6E]">
-                Official Zimbabwe Gateway • Integration ID: 26253
+                Official Zimbabwe Gateway • Verified Merchant
               </p>
             </div>
           </div>
@@ -493,7 +500,7 @@ export const PaynowPaymentModal: React.FC<PaynowPaymentModalProps> = ({
                     {/* Paynow Sandbox Test Numbers Helper */}
                     <div className="p-2.5 bg-[#F6F4EE] rounded-xl border border-[#E8E4D9] space-y-1.5 text-left">
                       <div className="text-[11px] font-semibold text-[#555]">
-                        Paynow Test Mode (Integration #26253):
+                        Paynow Test Mode:
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         <button
@@ -543,7 +550,7 @@ export const PaynowPaymentModal: React.FC<PaynowPaymentModalProps> = ({
                   Preparing Secure Payment...
                 </h3>
                 <p className="text-xs text-[#6E6E6E] max-w-xs">
-                  Connecting to Paynow Zimbabwe server gateway (ID: 26253) to generate your secure transaction.
+                  Connecting to Paynow Zimbabwe server gateway to generate your secure transaction.
                 </p>
               </div>
             </div>
@@ -778,7 +785,7 @@ export const PaynowPaymentModal: React.FC<PaynowPaymentModalProps> = ({
         {/* Footer info */}
         <div className="px-6 py-3 bg-[#F6F4EE] border-t border-[#E5E0D5] flex items-center justify-between text-[11px] text-[#7A7A7A]">
           <span>The Haven Guest House • Gweru</span>
-          <span>Paynow ID: 26253</span>
+          <span>Encrypted Gateway Checkout</span>
         </div>
       </div>
     </div>

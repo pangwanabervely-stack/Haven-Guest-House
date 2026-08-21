@@ -56,7 +56,8 @@ export const RoomsCatalog: React.FC<RoomsCatalogProps> = ({
           {rooms.map((room) => (
             <div
               key={room.id}
-              className="bg-white rounded-3xl overflow-hidden border border-[#E5E2D9] shadow-xs hover:shadow-sm hover:border-[#5A5A40] transition-all flex flex-col group"
+              onClick={() => onSelectRoom(room)}
+              className="bg-white rounded-3xl overflow-hidden border border-[#E5E2D9] shadow-xs hover:shadow-md hover:border-[#5A5A40] transition-all duration-300 flex flex-col group cursor-pointer hover:-translate-y-1"
             >
               {/* Photo & Top Tags */}
               <div className="relative aspect-[16/10] overflow-hidden bg-[#F5F2ED]">
@@ -113,15 +114,21 @@ export const RoomsCatalog: React.FC<RoomsCatalogProps> = ({
                 {/* Card Actions */}
                 <div className="pt-4 border-t border-[#F5F2ED] flex items-center justify-between gap-2">
                   <button
-                    onClick={() => onSelectRoom(room)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectRoom(room);
+                    }}
                     className="text-xs font-bold text-[#5A5A40] hover:text-[#2C2C2C] underline underline-offset-4"
                   >
                     View Details
                   </button>
 
                   <button
-                    onClick={() => onBookRoomDirect(room)}
-                    className="px-4 py-2 rounded-full bg-[#5A5A40] hover:bg-[#484833] text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors shadow-2xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onBookRoomDirect(room);
+                    }}
+                    className="px-4 py-2 rounded-full bg-[#5A5A40] hover:bg-[#484833] text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors shadow-2xs group-hover:bg-[#484833]"
                   >
                     <span>Reserve</span>
                     <ChevronRight className="w-3 h-3" />

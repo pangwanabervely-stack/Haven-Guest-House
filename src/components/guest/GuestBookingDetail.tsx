@@ -161,7 +161,7 @@ export const GuestBookingDetail: React.FC<GuestBookingDetailProps> = ({
                 </p>
                 <p className="flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5 text-[#5A5A40] shrink-0" />
-                  <span>+263 772 529 212 • pangwanabervely@gmail.com</span>
+                  <span>+263 772 529 212 • info@thehavenguesthouse.co.zw</span>
                 </p>
               </div>
             </div>

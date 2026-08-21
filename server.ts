@@ -501,10 +501,10 @@ async function updateSupabaseServicePayment(
 }
 
 // Paynow SDK Factory
-function getPaynow(appUrl?: string, bookingId?: string): Paynow | null {
-  const integrationId = process.env.PAYNOW_INTEGRATION_ID || '26253';
+export function getPaynow(appUrl?: string, bookingId?: string): Paynow | null {
+  const integrationId = process.env.PAYNOW_INTEGRATION_ID;
   const integrationKey = process.env.PAYNOW_INTEGRATION_KEY;
-  if (!integrationKey) {
+  if (!integrationId || !integrationKey) {
     return null;
   }
   const cleanAppUrl =
@@ -539,9 +539,8 @@ async function initiatePaynowGatewayTransaction(
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   const merchantAuthEmail =
     process.env.PAYNOW_AUTH_EMAIL ||
-    process.env.PAYNOW_MERCHANT_EMAIL ||
-    'pangwanabervely@gmail.com';
-  // For web payments, omit authEmail or pass merchant email. For mobile, pass merchantAuthEmail in test mode.
+    process.env.PAYNOW_MERCHANT_EMAIL;
+  // For web payments, omit authEmail or pass merchant email. For mobile, pass merchantAuthEmail in test mode if configured.
   const initialAuthEmail = method === 'web' ? undefined : merchantAuthEmail || customerEmail;
 
   let payment = paynow.createPayment(reference, initialAuthEmail as any);
@@ -695,28 +694,28 @@ async function sanitizeExistingServiceOrders() {
   }
 }
 
-async function startServer() {
+export function createExpressApp(): express.Express {
   const app = express();
-  const server = http.createServer(app);
-  const PORT = 3000;
+
+  // Handle Netlify function path rewriting if routed via /.netlify/functions/api
+  app.use((req, _res, next) => {
+    if (req.url.startsWith('/.netlify/functions/api')) {
+      const stripped = req.url.replace('/.netlify/functions/api', '');
+      req.url = stripped.startsWith('/api') ? stripped : `/api${stripped.startsWith('/') ? stripped : '/' + stripped}`;
+    }
+    next();
+  });
 
   // Support both JSON and URL-encoded bodies (Paynow sends callbacks as form-urlencoded)
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-
-  // Run startup clean sweeps
-  setTimeout(() => {
-    sanitizeExistingBookings();
-    sanitizeExistingServiceOrders();
-  }, 2000);
 
   // Health endpoint
   app.get('/api/health', (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
       service: 'The Haven Guest House & Management (Paynow Reconciled)',
-      paynowIntegrationId: process.env.PAYNOW_INTEGRATION_ID || '26253',
-      paynowConfigured: Boolean(process.env.PAYNOW_INTEGRATION_KEY),
+      paynowConfigured: Boolean(process.env.PAYNOW_INTEGRATION_KEY && process.env.PAYNOW_INTEGRATION_ID),
       resultUrlConfigured: Boolean(process.env.PAYNOW_RESULT_URL),
       returnUrlConfigured: Boolean(process.env.PAYNOW_RETURN_URL),
       transactionsCount: transactionsStore.size,
@@ -992,7 +991,7 @@ async function startServer() {
           status: 'pending',
           method,
           simulated: true,
-          message: 'Paynow Integration ID 26253 is ready. Awaiting PAYNOW_INTEGRATION_KEY secret for live transactions.'
+          message: 'Paynow simulated mode: Awaiting live PAYNOW_INTEGRATION_ID and PAYNOW_INTEGRATION_KEY environment variables for production gateway processing.'
         });
       }
     } catch (err: any) {
@@ -1600,6 +1599,14 @@ async function startServer() {
       }
 
       // Perform update in Supabase using admin client to guarantee execution
+      if (!supabaseAdmin) {
+        return res.json({
+          success: true,
+          room: { id: roomId, cleaning_status: cleaningStatus, updated_at: new Date().toISOString() },
+          message: `Room status updated to ${cleaningStatus} (local memory)`
+        });
+      }
+
       const { data, error } = await supabaseAdmin
         .from('rooms')
         .update({
@@ -1636,6 +1643,20 @@ async function startServer() {
     }
   });
 
+  return app;
+}
+
+export async function startServer() {
+  const app = createExpressApp();
+  const server = http.createServer(app);
+  const PORT = 3000;
+
+  // Run startup clean sweeps
+  setTimeout(() => {
+    sanitizeExistingBookings();
+    sanitizeExistingServiceOrders();
+  }, 2000);
+
   // Vite middleware in development
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -1659,8 +1680,12 @@ async function startServer() {
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`The Haven Guest House Server running on http://localhost:${PORT}`);
   });
+
+  return { app, server };
 }
 
-startServer().catch((err) => {
-  console.error('Failed to start server:', err);
-});
+if (!process.env.NETLIFY && process.env.NODE_ENV !== 'test') {
+  startServer().catch((err) => {
+    console.error('Failed to start server:', err);
+  });
+}

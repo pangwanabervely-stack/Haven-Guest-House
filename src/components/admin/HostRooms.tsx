@@ -264,7 +264,15 @@ export const HostRooms: React.FC<HostRoomsProps> = ({ rooms, onRefreshRooms }) =
 
       {/* ADD / EDIT MODAL */}
       {(isAddingNew || editingRoom) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsAddingNew(false);
+              setEditingRoom(null);
+            }
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm overflow-y-auto"
+        >
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-stone-200 shadow-2xl my-6 space-y-6">
             <div className="flex justify-between items-center pb-4 border-b border-stone-200">
               <h3 className="font-serif text-2xl font-medium text-stone-900">

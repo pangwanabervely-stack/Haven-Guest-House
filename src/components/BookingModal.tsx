@@ -118,6 +118,17 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     ) || 1
   );
 
+  // Escape key listener to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSubmitting && !confirmedBooking) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSubmitting, confirmedBooking, onClose]);
+
   const baseTotalAmount = nights * room.price_per_night;
 
   // Calculate discounts based on applied promo code
@@ -290,7 +301,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !confirmedBooking && !isSubmitting) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm overflow-y-auto"
+    >
       <div className="bg-[#FDFCF9] rounded-[32px] shadow-2xl max-w-2xl w-full overflow-hidden border border-[#E5E2D9] my-6">
         {/* Modal Header */}
         <div className="bg-[#2C2C2C] text-white p-6 relative flex items-center justify-between border-b border-[#3E3E3E]">
@@ -526,6 +544,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 >
                   Apply
                 </button>
+                {(promoInput || appliedPromo) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPromoInput('');
+                      setAppliedPromo('');
+                      setPromoMessage(null);
+                    }}
+                    className="px-3 py-1.5 bg-white hover:bg-[#F5F2ED] text-[#8C887D] hover:text-[#2C2C2C] border border-[#E5E2D9] text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
               </div>
 
               {promoMessage && (

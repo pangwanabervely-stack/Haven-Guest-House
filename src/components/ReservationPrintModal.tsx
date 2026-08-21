@@ -13,6 +13,17 @@ export const ReservationPrintModal: React.FC<ReservationPrintModalProps> = ({
   isOpen,
   onClose
 }) => {
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !booking) return null;
 
   const inD = new Date(booking.check_in_date);
@@ -25,7 +36,12 @@ export const ReservationPrintModal: React.FC<ReservationPrintModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm print:p-0 print:bg-white print:static">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm print:p-0 print:bg-white print:static"
+    >
       <div className="bg-[#FDFCF9] rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#E5E2D9] print:border-none print:shadow-none print:max-w-none print:w-full print:rounded-none print:max-h-none">
         {/* Modal Action Bar (Hidden when printed) */}
         <div className="flex items-center justify-between p-4 px-6 border-b border-[#E5E2D9] bg-white sticky top-0 z-10 print:hidden">
@@ -70,7 +86,7 @@ export const ReservationPrintModal: React.FC<ReservationPrintModalProps> = ({
                 </p>
                 <p className="flex items-center gap-1">
                   <Phone className="w-3 h-3 text-[#5A5A40]" />
-                  +263 772 529 212 • pangwanabervely@gmail.com
+                  +263 772 529 212 • info@thehavenguesthouse.co.zw
                 </p>
               </div>
             </div>
